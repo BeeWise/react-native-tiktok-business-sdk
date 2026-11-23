@@ -2,6 +2,9 @@ import Foundation
 import React
 import UIKit
 import TikTokBusinessSDK
+#if SWIFT_PACKAGE
+import TikTokBusinessSDKCore
+#endif
 
 private let supportedTTCurrencies: Set<String> = [
   "AED", "ARS", "AUD", "BDT", "BGN", "BHD", "BIF", "BOB", "BRL",

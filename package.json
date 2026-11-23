@@ -18,6 +18,7 @@
     }
   },
   "files": [
+    "Package.swift",
     "src",
     "lib",
     "android",
@@ -36,6 +37,9 @@
     "!**/__mocks__",
     "!**/.*"
   ],
+  "swiftpmConfig": {
+    "name": "TikTokBusiness"
+  },
   "scripts": {
     "test": "jest",
     "typecheck": "tsc",
