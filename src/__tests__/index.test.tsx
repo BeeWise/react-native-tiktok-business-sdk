@@ -4,6 +4,7 @@ import {
   initializeSdk,
   identify,
   logout,
+  flush,
   trackEvent,
   trackContentEvent,
   trackCustomEvent,
@@ -29,7 +30,7 @@ describe('TikTokBusiness', () => {
   describe('initializeSdk', () => {
     it('should call native module with correct parameters', async () => {
       const appId = 'test-app-id';
-      const ttAppId = 'test-tiktok-app-id';
+      const ttAppId = '123456';
       const accessToken = 'test-token';
       const debug = true;
 
@@ -41,13 +42,14 @@ describe('TikTokBusiness', () => {
         appId,
         ttAppId,
         accessToken,
-        debug
+        debug,
+        {}
       );
     });
 
     it('should default debug to false when not provided', async () => {
       const appId = 'test-app-id';
-      const ttAppId = 'test-tiktok-app-id';
+      const ttAppId = '123456';
       const accessToken = 'test-token';
 
       mockTikTokBusinessModule.initializeSdk.mockResolvedValue('success');
@@ -58,13 +60,70 @@ describe('TikTokBusiness', () => {
         appId,
         ttAppId,
         accessToken,
-        false
+        false,
+        {}
+      );
+    });
+
+    it('should pass options to native module', async () => {
+      const appId = 'test-app-id';
+      const ttAppId = '123456';
+      const accessToken = 'test-token';
+      const options = {
+        disableInstallTracking: true,
+        disablePaymentTracking: true,
+        disableSKAdNetworkSupport: true,
+      };
+
+      mockTikTokBusinessModule.initializeSdk.mockResolvedValue('success');
+
+      await initializeSdk(appId, ttAppId, accessToken, false, options);
+
+      expect(mockTikTokBusinessModule.initializeSdk).toHaveBeenCalledWith(
+        appId,
+        ttAppId,
+        accessToken,
+        false,
+        options
+      );
+    });
+
+    it('should pass disableAutoTracking option to native module', async () => {
+      const appId = 'test-app-id';
+      const ttAppId = '123456';
+      const accessToken = 'test-token';
+      const options = { disableAutoTracking: true };
+
+      mockTikTokBusinessModule.initializeSdk.mockResolvedValue('success');
+
+      await initializeSdk(appId, ttAppId, accessToken, undefined, options);
+
+      expect(mockTikTokBusinessModule.initializeSdk).toHaveBeenCalledWith(
+        appId,
+        ttAppId,
+        accessToken,
+        false,
+        options
+      );
+    });
+
+    it('should default options to empty object when not provided', async () => {
+      mockTikTokBusinessModule.initializeSdk.mockResolvedValue('success');
+
+      await initializeSdk('app-id', '123456', 'test-token');
+
+      expect(mockTikTokBusinessModule.initializeSdk).toHaveBeenCalledWith(
+        'app-id',
+        '123456',
+        'test-token',
+        false,
+        {}
       );
     });
 
     it('should handle initialization errors', async () => {
       const appId = 'test-app-id';
-      const ttAppId = 'test-tiktok-app-id';
+      const ttAppId = '123456';
       const accessToken = 'test-token';
       const error = new Error('Initialization failed');
 
@@ -73,6 +132,152 @@ describe('TikTokBusiness', () => {
       await expect(initializeSdk(appId, ttAppId, accessToken)).rejects.toThrow(
         'Initialization failed'
       );
+    });
+
+    // Multiple TikTok App IDs support - Valid inputs
+    describe('Multiple TikTok App IDs - Valid Inputs', () => {
+      it('should accept single string App ID (backward compatibility)', async () => {
+        mockTikTokBusinessModule.initializeSdk.mockResolvedValue('success');
+
+        await initializeSdk('app-id', '123456', 'token');
+
+        expect(mockTikTokBusinessModule.initializeSdk).toHaveBeenCalledWith(
+          'app-id',
+          '123456',
+          'token',
+          false,
+          {}
+        );
+      });
+
+      it('should accept comma-separated string (backward compatibility)', async () => {
+        mockTikTokBusinessModule.initializeSdk.mockResolvedValue('success');
+
+        await initializeSdk('app-id', '11,22,33', 'token');
+
+        expect(mockTikTokBusinessModule.initializeSdk).toHaveBeenCalledWith(
+          'app-id',
+          '11,22,33',
+          'token',
+          false,
+          {}
+        );
+      });
+
+      it('should accept array of App IDs and convert to comma-separated string', async () => {
+        mockTikTokBusinessModule.initializeSdk.mockResolvedValue('success');
+
+        await initializeSdk('app-id', ['11', '22', '33'], 'token');
+
+        expect(mockTikTokBusinessModule.initializeSdk).toHaveBeenCalledWith(
+          'app-id',
+          '11,22,33',
+          'token',
+          false,
+          {}
+        );
+      });
+
+      it('should accept array with single element', async () => {
+        mockTikTokBusinessModule.initializeSdk.mockResolvedValue('success');
+
+        await initializeSdk('app-id', ['123456'], 'token');
+
+        expect(mockTikTokBusinessModule.initializeSdk).toHaveBeenCalledWith(
+          'app-id',
+          '123456',
+          'token',
+          false,
+          {}
+        );
+      });
+
+      it('should accept array with many elements', async () => {
+        mockTikTokBusinessModule.initializeSdk.mockResolvedValue('success');
+
+        await initializeSdk(
+          'app-id',
+          ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+          'token'
+        );
+
+        expect(mockTikTokBusinessModule.initializeSdk).toHaveBeenCalledWith(
+          'app-id',
+          '1,2,3,4,5,6,7,8,9,10',
+          'token',
+          false,
+          {}
+        );
+      });
+    });
+
+    // Multiple TikTok App IDs support - Invalid inputs
+    describe('Multiple TikTok App IDs - Invalid Inputs', () => {
+      it('should reject empty string', async () => {
+        await expect(initializeSdk('app-id', '', 'token')).rejects.toThrow(
+          'INVALID_TTAPPID_EMPTY'
+        );
+      });
+
+      it('should reject empty array', async () => {
+        await expect(initializeSdk('app-id', [], 'token')).rejects.toThrow(
+          'INVALID_TTAPPID_EMPTY'
+        );
+      });
+
+      it('should reject string with spaces', async () => {
+        await expect(
+          initializeSdk('app-id', '11, 22, 33', 'token')
+        ).rejects.toThrow('INVALID_TTAPPID_SPACES');
+      });
+
+      it('should reject string with full-width comma', async () => {
+        await expect(
+          initializeSdk('app-id', '11\uff0c22\uff0c33', 'token')
+        ).rejects.toThrow('INVALID_TTAPPID_FULLWIDTH_COMMA');
+      });
+
+      it('should reject string with trailing comma', async () => {
+        await expect(
+          initializeSdk('app-id', '11,22,33,', 'token')
+        ).rejects.toThrow('INVALID_TTAPPID_TRAILING_COMMA');
+      });
+
+      it('should reject string with leading comma', async () => {
+        await expect(
+          initializeSdk('app-id', ',11,22,33', 'token')
+        ).rejects.toThrow('INVALID_TTAPPID_TRAILING_COMMA');
+      });
+
+      it('should reject string with consecutive commas', async () => {
+        await expect(
+          initializeSdk('app-id', '11,,22,,33', 'token')
+        ).rejects.toThrow('INVALID_TTAPPID_CONSECUTIVE_COMMAS');
+      });
+
+      it('should reject array with empty string element', async () => {
+        await expect(
+          initializeSdk('app-id', ['11', '', '33'], 'token')
+        ).rejects.toThrow('INVALID_TTAPPID_EMPTY');
+      });
+
+      it('should reject array with non-numeric element', async () => {
+        await expect(
+          initializeSdk('app-id', ['11', 'abc', '33'], 'token')
+        ).rejects.toThrow('INVALID_TTAPPID_FORMAT');
+      });
+
+      it('should reject string with letters', async () => {
+        await expect(
+          initializeSdk('app-id', 'abc,def', 'token')
+        ).rejects.toThrow('INVALID_TTAPPID_FORMAT');
+      });
+
+      it('should reject string with special characters', async () => {
+        await expect(
+          initializeSdk('app-id', '11@22#33', 'token')
+        ).rejects.toThrow('INVALID_TTAPPID_FORMAT');
+      });
     });
   });
 
@@ -119,6 +324,23 @@ describe('TikTokBusiness', () => {
       mockTikTokBusinessModule.logout.mockRejectedValue(error);
 
       await expect(logout()).rejects.toThrow('Logout failed');
+    });
+  });
+
+  describe('flush', () => {
+    it('should call native module flush', async () => {
+      mockTikTokBusinessModule.flush.mockResolvedValue('success');
+
+      await flush();
+
+      expect(mockTikTokBusinessModule.flush).toHaveBeenCalled();
+    });
+
+    it('should handle flush errors', async () => {
+      const error = new Error('Flush failed');
+      mockTikTokBusinessModule.flush.mockRejectedValue(error);
+
+      await expect(flush()).rejects.toThrow('Flush failed');
     });
   });
 

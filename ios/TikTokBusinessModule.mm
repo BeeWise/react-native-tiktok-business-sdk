@@ -12,6 +12,9 @@ RCT_EXTERN_METHOD(identify:(NSString *)externalId
 RCT_EXTERN_METHOD(logout:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(flush:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(trackEvent:(NSString *)eventName
                   eventId:(NSString *)eventId
                   parameters:(NSDictionary *)parameters
@@ -37,6 +40,7 @@ RCT_EXTERN_METHOD(initializeSdk:(NSString *)appId
                   ttAppId:(NSString *)ttAppId
                   accessToken:(NSString *)accessToken
                   debug:(nonnull NSNumber *)debug
+                  options:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 

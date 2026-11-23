@@ -87,3 +87,9 @@ nitrogen/
 
 # Testing
 coverage/
+
+# Environment files
+.env
+
+# Claude Code
+.claude/CLAUDE.md
